@@ -1,4 +1,4 @@
-import {refreshConfig, refreshVocabTable, addListeners} from './components/popup'
+import { refreshConfig, refreshVocabTable, addListeners } from './components/popup';
 
 // Popup Initialization
 refreshConfig();

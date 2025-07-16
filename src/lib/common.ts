@@ -1,3 +1,5 @@
+import { Config, VocabStorage, ChromeStorage } from '../types';
+
 const defaultFrom = 'en';
 const defaultTo = 'zh-TW';
 
@@ -26,9 +28,9 @@ export const getImportFile = () => {
   return file;
 };
 
-export const getConfig = async () => {
+export const getConfig = async (): Promise<Config> => {
   // 1. retrieve config if any
-  const config = await retrieve('config');
+  const config = await retrieve('config') as Config | undefined;
   // 2. if config exists, return it
   if (config) {
     return config;
@@ -39,14 +41,14 @@ export const getConfig = async () => {
   return { from: defaultFrom, to: defaultTo };
 };
 
-export const getVocabs = async () => {
-  return await retrieve('vocabs');
+export const getVocabs = async (): Promise<VocabStorage | undefined> => {
+  return await retrieve('vocabs') as VocabStorage | undefined;
 };
 
-export const saveConfig = async (key, value) => {
+export const saveConfig = async (key: keyof Config, value: string): Promise<void> => {
   const all = await retrieveAll();
   if (!all.config || Object.keys(all.config).length === 0) {
-    all.config = {};
+    all.config = { from: defaultFrom, to: defaultTo };
   }
   all.config[key] = value;
   await new Promise<void>(resolve => chrome.storage.local.set(all, () => {
@@ -54,7 +56,7 @@ export const saveConfig = async (key, value) => {
   }));
 };
 
-export const saveVocab = async (id, vocab, from, to, url) => {
+export const saveVocab = async (id: string | null, vocab: string, from: string, to: string, url: string | null): Promise<void> => {
   const all = await retrieveAll();
   if (!all.vocabs || Object.keys(all.vocabs).length === 0) {
     all.vocabs = {};
@@ -66,7 +68,7 @@ export const saveVocab = async (id, vocab, from, to, url) => {
   }));
 };
 
-export const deleteVocab = async (id) => {
+export const deleteVocab = async (id: string): Promise<void> => {
   const all = await retrieveAll();
   if (!all.vocabs || Object.keys(all.vocabs).length === 0) {
     return;
@@ -77,7 +79,7 @@ export const deleteVocab = async (id) => {
   }));
 };
 
-export const retrieve = async (key) => {
+export const retrieve = async (key: string): Promise<any> => {
   const value = await new Promise(resolve => chrome.storage.local.get(key,
     (obj) => {
       resolve(obj[key]);
@@ -86,7 +88,7 @@ export const retrieve = async (key) => {
   return cloneDeep(value);
 };
 
-export const retrieveAll = async () => {
+export const retrieveAll = async (): Promise<ChromeStorage> => {
   const all = await new Promise(resolve => chrome.storage.local.get(null,
     (obj) => {
       resolve(obj);
@@ -95,5 +97,5 @@ export const retrieveAll = async () => {
   return cloneDeep(all);
 };
 
-export const cloneDeep = (obj) =>
+export const cloneDeep = <T>(obj: T): T =>
   obj ? JSON.parse(JSON.stringify(obj)) : obj;
